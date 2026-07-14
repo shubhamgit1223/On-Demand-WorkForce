@@ -1,0 +1,25 @@
+body {
+    background-color: lightblue;
+    text-align: center;
+    background-image: url("https://wallpapercave.com/wp/wp4390828.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+}
+
+h1 {
+    color: white;
+    font-size: 36px;
+    text-align: center;
+}
+
+form {
+    text-align: center;
+}
+
+.BOX {
+    padding: 20px;
+    background-color: white;
+    display: inline-block;
+}

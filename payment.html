@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Payment</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<style>
+body {
+  background: #0f172a;
+  color: #e6eef8;
+  font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 980px;
+  margin: 32px auto;
+  padding: 24px;
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.left {
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-box {
+  background: #0b1220;
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(15,23,42,0.6);
+}
+
+.qr-box img, .qr-box canvas {
+  width: 260px;
+  height: 260px;
+  display: block;
+}
+
+.right {
+  flex: 1;
+}
+
+.meta h2 { margin: 0 0 6px 0; color: #f8fafc }
+.meta p { margin: 0 0 12px 0; color: #9aa6c3 }
+
+.methods { display: flex; gap: 12px; flex-wrap: wrap }
+
+.method {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.03);
+  padding: 10px 14px;
+  border-radius: 10px;
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+  transition: transform .12s ease, background .12s ease;
+}
+.method:hover { transform: translateY(-3px); background: rgba(79,70,229,0.12) }
+
+.method svg { width: 28px; height: 28px; }
+
+.pay-btns { margin-top: 18px; display:flex; gap:12px }
+.pay-btn { padding: 10px 16px; border-radius: 10px; border: none; cursor: pointer; font-weight:600 }
+.pay-upi { background: linear-gradient(90deg,#0f172a,#4f46e5); color: white }
+.pay-card { background: linear-gradient(90deg,#111827,#0ea5a4); color: white }
+.pay-cash { background: linear-gradient(90deg,#92400e,#f59e0b); color: white }
+
+.hint { margin-top:12px; color:#9aa6c3; font-size:13px }
+
+@media (max-width:820px){
+  .card{flex-direction:column;align-items:center}
+  .left{width:100%}
+  .qr-box img, .qr-box canvas { width: 220px; height:220px }
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+  <div class="card">
+    <div class="left">
+      <div class="qr-box">
+        <!-- If you want to use a static QR image place it at /static/qr.png -->
+        <img id="qr-img" alt="QR Payment" style="display:none">
+        <canvas id="qr" aria-hidden="true"></canvas>
+      </div>
+      <div class="hint">Scan with any UPI app (PhonePe, Google Pay, Paytm, etc.)</div>
+    </div>
+
+    <div class="right">
+      <div class="meta">
+        <h2 id="worker"></h2>
+        <p id="amount"></p>
+      </div>
+
+      <div class="methods">
+        <div class="method" id="m-gpay" title="Google Pay">
+          <img id="img-gpay" alt="gpay" style="display:none" />
+          <!-- GPay-like SVG -->
+          <svg id="svg-gpay" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 12h20" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          <div>Google Pay</div>
+        </div>
+
+        <div class="method" id="m-phonepe" title="PhonePe">
+          <img id="img-phonepe" alt="phonepe" style="display:none" />
+          <svg id="svg-phonepe" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="18" height="14" x="3" y="5" rx="3" stroke="#fff" stroke-width="1.2"/></svg>
+          <div>PhonePe</div>
+        </div>
+
+        <div class="method" id="m-paytm" title="Paytm">
+          <img id="img-paytm" alt="paytm" style="display:none" />
+          <svg id="svg-paytm" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.2"/></svg>
+          <div>Paytm</div>
+        </div>
+
+        <div class="method" id="m-card" title="Card">
+          <img id="img-card" alt="card" style="display:none" />
+          <svg id="svg-card" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="6" width="20" height="12" rx="2" stroke="#fff" stroke-width="1.2"/></svg>
+          <div>Card</div>
+        </div>
+
+        <div class="method" id="m-cash" title="Cash">
+          <img id="img-cash" alt="cash" style="display:none" />
+          <svg id="svg-cash" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18v10H3z" stroke="#fff" stroke-width="1.2"/></svg>
+          <div>Cash</div>
+        </div>
+      </div>
+
+      <div class="pay-btns">
+        <button class="pay-btn pay-upi" id="btn-upi">Pay via UPI</button>
+        <button class="pay-btn pay-card" id="btn-card">Pay with Card</button>
+        <button class="pay-btn pay-cash" id="btn-cash">Pay Cash</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const worker = localStorage.getItem("worker") || 'Worker';
+const amount = localStorage.getItem("amount") || '0';
+
+document.getElementById("worker").innerText = worker;
+document.getElementById("amount").innerText = "Pay ₹" + amount;
+
+// UPI LINK (works if scanned)
+const upi = `upi://pay?pa=worker@bank&pn=${encodeURIComponent(worker)}&am=${amount}&cu=INR`;
+
+async function tryLoadStaticQR(){
+  try{
+    const resp = await fetch('/static/qr.png', {method:'HEAD'});
+    if(resp.ok){
+      const img = document.getElementById('qr-img');
+      img.src = '/static/qr.png';
+      img.style.display = 'block';
+      document.getElementById('qr').style.display = 'none';
+      return true;
+    }
+  }catch(e){/* ignore */}
+  return false;
+}
+
+QRCode.toCanvas(document.getElementById('qr'), upi).catch(err=>{
+  console.warn('QR generation failed', err);
+});
+
+// Try to show static image if present
+tryLoadStaticQR();
+
+function finalizePayment(type, status){
+  localStorage.setItem('paymentType', type);
+  localStorage.setItem('paymentStatus', status);
+  if(type === 'upi' && status === 'paid'){
+    alert('✅ UPI Payment Successful!');
+  } else if(type === 'card'){
+    alert('✅ Card Payment Successful!');
+  } else if(type === 'cash'){
+    alert('💰 Cash selected. Pay after service.');
+  }
+  window.location.href = 'tracking.html';
+}
+
+document.getElementById('btn-upi').addEventListener('click', ()=>{
+  // In a real app you'd open a UPI intent; here we mark paid for demo
+  finalizePayment('upi','paid');
+});
+document.getElementById('btn-card').addEventListener('click', ()=>{
+  finalizePayment('card','paid');
+});
+document.getElementById('btn-cash').addEventListener('click', ()=>{
+  finalizePayment('cash','pending');
+});
+
+// Make method tiles clickable too
+document.querySelectorAll('.method').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    const id = el.id;
+    if(id.includes('gpay')||id.includes('phonepe')||id.includes('paytm')){
+      finalizePayment('upi','paid');
+    } else if(id.includes('card')){
+      finalizePayment('card','paid');
+    } else if(id.includes('cash')){
+      finalizePayment('cash','pending');
+    }
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Worker CRUD</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            margin: 0;
+            padding: 0;
+        }
+
+        h2 {
+            text-align: center;
+            color: white;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+        }
+
+        input {
+            width: 95%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+
+        a {
+            text-decoration: none;
+            color: red;
+            font-weight: bold;
+        }
+
+        .update-form {
+            margin-top: 20px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>Worker Data</h2>
+
+    <!-- ADD FORM -->
+    <div class="card">
+        <h3>Add Worker</h3>
+        <form action="/c_insert" method="post">
+            <input type="number" name="id" placeholder="Enter ID" required>
+            <input type="text" name="name" placeholder="New Name" required>
+            <input type="text" name="phone" placeholder="New Phone" required>
+            <input type="text" name="email" placeholder="New Email" required>
+            <input type="text" name="password" placeholder="New Password" required>
+            <input type="text" name="profession" placeholder="New profession" required>
+            <input type="number" name="experience" placeholder="New experience" required>
+            <input type="text" name="location" placeholder="New location" required>
+            <button type="submit">Add Worker</button>
+        </form>
+    </div>
+    
+    <!-- TABLE -->
+    <div class="card">
+        <h3>Worker List</h3>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>phone</th>
+                <th>email</th>
+                <th>password</th>
+                <th>profession</th>
+                <th>experience</th>
+                <th>location</th>
+            </tr>
+
+
+            {% for s in workers %}
+            <tr>
+                <td>{{ s[0] }}</td>
+                <td>{{ s[1] }}</td>
+                <td>{{ s[2] }}</td>
+                <td>{{ s[3] }}</td>
+                <td>{{ s[4] }}</td>
+                <td>{{ s[5] }}</td>
+                <td>{{ s[6] }}</td>
+                <td>{{ s[7] }}</td>
+                <td>
+                    <a href="/delete/{{ s[0] }}">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- UPDATE FORM -->
+    <div class="card">
+        <h3>Update worker</h3>
+        <form action="/update" method="post" class="update-form">
+            <input type="number" name="id" placeholder="Enter ID" required>
+            <input type="text" name="name" placeholder="New Name" required>
+            <input type="text" name="phone" placeholder="New Phone" required>
+            <input type="text" name="email" placeholder="New Email" required>
+            <input type="text" name="password" placeholder="New Password" required>
+            <input type="text" name="profession" placeholder="New profession" required>
+            <input type="number" name="experience" placeholder="New experience" required>
+            <input type="text" name="location" placeholder="New location" required>
+            <button type="submit">Update</button>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Services</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI';
+  background: #0f172a;
+  color: white;
+}
+
+/* NAV */
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 15px;
+  background: rgba(255,255,255,0.05);
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+nav a:hover {
+  color: #4f46e5;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  padding: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+input, select {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  min-width: 150px;
+}
+
+input::placeholder {
+  color: #999;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+  gap: 20px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  background: rgba(255,255,255,0.08);
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: 0.3s;
+}
+
+.card:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(79, 70, 229, 0.5);
+}
+
+.card h3 {
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+.card p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.price {
+  font-size: 20px;
+  font-weight: bold;
+  color: #4f46e5;
+  margin: 10px 0;
+}
+
+.rating {
+  font-size: 16px;
+  color: #fbbf24;
+}
+
+.ai-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #4f46e5;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+  font-weight: 600;
+}
+
+button:hover {
+  background: #4338ca;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <a href="/dashboard">Dashboard</a>
+  <a href="/profile.html">Profile</a>
+  <a href="/contact.html">Contact</a>
+  <a href="/logout">Logout</a>
+</nav>
+
+<div class="filters">
+  <input type="text" id="search" placeholder="Search by name or profession...">
+  
+  <select id="priceFilter">
+    <option value="">All Prices</option>
+    <option value="low">Low to High</option>
+    <option value="high">High to Low</option>
+  </select>
+
+  <select id="ratingFilter">
+    <option value="">All Ratings</option>
+    <option value="4">4+</option>
+    <option value="3">3+</option>
+  </select>
+
+  <button onclick="resetFilters()" style="background: #6b7280;">Reset Filters</button>
+</div>
+
+<div class="grid" id="workers">
+  <div class="no-results">Loading workers...</div>
+</div>
+
+<script>
+let allWorkers = [];
+
+// Fetch workers from API
+async function loadWorkers() {
+  try {
+    const response = await fetch('/api/workers');
+    allWorkers = await response.json();
+    
+    if (allWorkers.error) {
+      document.getElementById('workers').innerHTML = '<div class="no-results">Error loading workers</div>';
+      return;
+    }
+    
+    // Sort by AI recommendation (rating desc, price asc, distance asc)
+    allWorkers.sort((a, b) => {
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      if (a.price !== b.price) return a.price - b.price;
+      return a.distance - b.distance;
+    });
+    
+    display(allWorkers);
+  } catch (error) {
+    console.error('Error loading workers:', error);
+    document.getElementById('workers').innerHTML = '<div class="no-results">Error loading workers</div>';
+  }
+}
+
+function display(data) {
+  const container = document.getElementById('workers');
+  
+  if (data.length === 0) {
+    container.innerHTML = '<div class="no-results">No workers found</div>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  data.forEach((w, index) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    if (index < 3) {
+      const badge = document.createElement('div');
+      badge.className = 'ai-badge';
+      badge.textContent = '✨ AI Recommended';
+      card.appendChild(badge);
+    }
+
+    const title = document.createElement('h3');
+    title.textContent = w.name;
+    card.appendChild(title);
+
+    const prof = document.createElement('p');
+    prof.innerHTML = `<strong>${w.profession}</strong>`;
+    card.appendChild(prof);
+
+    const loc = document.createElement('p');
+    loc.textContent = '📍 ' + (w.location || 'Unknown');
+    card.appendChild(loc);
+
+    const exp = document.createElement('p');
+    exp.textContent = 'Experience: ' + (w.experience || 0) + ' years';
+    card.appendChild(exp);
+
+    const priceDiv = document.createElement('div');
+    priceDiv.className = 'price';
+    priceDiv.textContent = '₹' + (w.price || 0);
+    card.appendChild(priceDiv);
+
+    const ratingDiv = document.createElement('div');
+    ratingDiv.className = 'rating';
+    ratingDiv.textContent = '⭐ ' + (w.rating ? Number(w.rating).toFixed(1) : 'N/A') + '/5';
+    card.appendChild(ratingDiv);
+
+    const dist = document.createElement('p');
+    dist.textContent = (w.distance || 0) + ' km away';
+    card.appendChild(dist);
+
+    const btn = document.createElement('button');
+    btn.textContent = 'Hire Now';
+    btn.addEventListener('click', () => hire(w.id, w.name, w.profession, w.price, w.location));
+    card.appendChild(btn);
+
+    container.appendChild(card);
+  });
+}
+
+// Address cache to avoid repeated API calls
+const addressCache = {};
+
+// Reverse geocode coordinates to get address with caching
+async function getAddressFromCoordinates(lat, lng) {
+  const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+  
+  if (addressCache[key]) {
+    return addressCache[key];
+  }
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) throw new Error('Geocoding API error');
+    
+    const data = await response.json();
+    if (data.address) {
+      const address = data.address.road || data.address.neighbourhood || data.address.suburb || data.address.city || data.address.county;
+      const result = address ? address : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      addressCache[key] = result;
+      return result;
+    }
+  } catch (error) {
+    console.warn('Geocoding failed, using coordinates:', error);
+  }
+  
+  const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  addressCache[key] = fallback;
+  return fallback;
+}
+
+// Get customer location from Geolocation, API, or localStorage
+async function getCustomerLocation() {
+  return new Promise((resolve) => {
+    const storedLocation = localStorage.getItem('customerLocation');
+    if (!navigator.geolocation) {
+      return resolve({
+        address: storedLocation || 'Unknown Location',
+        lat: parseFloat(localStorage.getItem('customerLat')) || null,
+        lng: parseFloat(localStorage.getItem('customerLng')) || null
+      });
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const address = await getAddressFromCoordinates(lat, lng);
+        const coords = {
+          address: address,
+          lat: lat,
+          lng: lng
+        };
+        localStorage.setItem('customerLocation', coords.address);
+        localStorage.setItem('customerLat', coords.lat);
+        localStorage.setItem('customerLng', coords.lng);
+        resolve(coords);
+      },
+      (error) => {
+        console.warn('Geolocation unavailable:', error.message);
+        const storedLocation = localStorage.getItem('customerLocation');
+        resolve({
+          address: storedLocation || 'Unknown Location',
+          lat: parseFloat(localStorage.getItem('customerLat')) || null,
+          lng: parseFloat(localStorage.getItem('customerLng')) || null
+        });
+      },
+      {enableHighAccuracy: true, timeout: 10000, maximumAge: 10000}
+    );
+  });
+}
+
+async function hire(workerId, workerName, profession, price, workerLocation) {
+  try {
+    // Get customer location
+    const customerLocationData = await getCustomerLocation();
+    const customerLocation = customerLocationData.address;
+    const customerLat = customerLocationData.lat;
+    const customerLng = customerLocationData.lng;
+
+    if (!customerLocation || customerLocation === 'Not available') {
+      alert('Please enter your location before booking a worker.');
+      return;
+    }
+    
+    // Book worker with locations
+    const bookingResponse = await fetch('/api/book-worker', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        worker_id: workerId,
+        worker_name: workerName,
+        profession: profession,
+        amount: price,
+        customer_location: customerLocation,
+        customer_lat: customerLat,
+        customer_lng: customerLng,
+        worker_location: workerLocation
+      })
+    });
+    
+    const result = await bookingResponse.json();
+    console.log('Booking response:', bookingResponse.status, result);
+
+    if (bookingResponse.ok && result.success) {
+      localStorage.setItem('worker', workerName);
+      localStorage.setItem('amount', price);
+      localStorage.setItem('profession', profession);
+      localStorage.setItem('workerLocation', workerLocation);
+      alert('Worker booked! Proceeding to payment...');
+      window.location.href = 'payment.html';
+    } else {
+      const errorMsg = result.error || 'Unknown error occurred';
+      console.error('Booking error:', bookingResponse.status, errorMsg);
+      alert('Error booking worker: ' + errorMsg);
+    }
+  } catch (error) {
+    console.error('Error booking worker:', error);
+    alert('Error booking worker: ' + error.message);
+  }
+}
+
+// Filter functions
+document.getElementById('search').addEventListener('input', function() {
+  const query = this.value.toLowerCase();
+  const filtered = allWorkers.filter(w => 
+    w.name.toLowerCase().includes(query) || 
+    w.profession.toLowerCase().includes(query) ||
+    w.location.toLowerCase().includes(query)
+  );
+  applyAllFilters(filtered);
+});
+
+document.getElementById('priceFilter').addEventListener('change', function() {
+  applyAllFilters(allWorkers);
+});
+
+document.getElementById('ratingFilter').addEventListener('change', function() {
+  applyAllFilters(allWorkers);
+});
+
+function applyAllFilters(workers) {
+  let filtered = workers;
+  
+  // Apply search filter
+  const searchQuery = document.getElementById('search').value.toLowerCase();
+  if (searchQuery) {
+    filtered = filtered.filter(w => 
+      w.name.toLowerCase().includes(searchQuery) || 
+      w.profession.toLowerCase().includes(searchQuery) ||
+      w.location.toLowerCase().includes(searchQuery)
+    );
+  }
+  
+  // Apply price filter
+  const priceFilter = document.getElementById('priceFilter').value;
+  if (priceFilter === 'low') {
+    filtered.sort((a, b) => a.price - b.price);
+  } else if (priceFilter === 'high') {
+    filtered.sort((a, b) => b.price - a.price);
+  } else {
+    // Default: AI recommended sort
+    filtered.sort((a, b) => {
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      if (a.price !== b.price) return a.price - b.price;
+      return a.distance - b.distance;
+    });
+  }
+  
+  // Apply rating filter
+  const ratingFilter = parseFloat(document.getElementById('ratingFilter').value);
+  if (ratingFilter) {
+    filtered = filtered.filter(w => w.rating >= ratingFilter);
+  }
+  
+  display(filtered);
+}
+
+function resetFilters() {
+  document.getElementById('search').value = '';
+  document.getElementById('priceFilter').value = '';
+  document.getElementById('ratingFilter').value = '';
+  
+  // Sort by AI recommendation
+  allWorkers.sort((a, b) => {
+    if (b.rating !== a.rating) return b.rating - a.rating;
+    if (a.price !== b.price) return a.price - b.price;
+    return a.distance - b.distance;
+  });
+  
+  display(allWorkers);
+}
+
+loadWorkers();
+</script>
+
+</body>
+</html>

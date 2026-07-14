@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>check payment</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  background: #0f172a;
+  color: white;
+  font-family: 'Segoe UI';
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.card {
+  background: rgba(255,255,255,0.08);
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  width: 300px;
+}
+button {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #4f46e5;
+  color: white;
+}
+
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Confirm Payment</h2>
+  <p id="paymentInfo"></p>
+    <button onclick="confirmPayment()">Confirm Payment</button>
+</div>
+<script>
+  const paymentType = localStorage.getItem("paymentType") || "online/cash";
+  const paymentStatus = localStorage.getItem("paymentStatus") || "paid";
+  
+  document.getElementById("paymentInfo").innerText = `Payment Type: ${paymentType.toUpperCase()} | Status: ${paymentStatus.toUpperCase()}`;
+ function confirmPayment(){
+   if(paymentType === "cash" && paymentStatus === "pending"){
+     const confirmPay = confirm("Have you paid cash to the worker?");
+     if(confirmPay){
+       localStorage.setItem("paymentStatus", "paid");
+       alert("✅ Cash Payment Confirmed!");
+       window.location.href = "w_complete.html";
+     }
+   } else {
+     // already paid (UPI/Card)
+     window.location.href = "w_complete.html";
+   }
+ }
+</script>
+  </body>
+</html>

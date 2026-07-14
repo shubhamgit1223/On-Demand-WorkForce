@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - Workforce Platform</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  display: flex;
+  height: 100vh;
+  background: #0f172a;
+  color: #fff;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 230px;
+  background: #1e293b;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.sidebar ul {
+  list-style: none;
+}
+
+.sidebar ul li {
+  padding: 12px;
+  margin: 10px 0;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.sidebar ul li:hover {
+  background: #334155;
+}
+
+/* Main */
+.main {
+  flex: 1;
+  padding: 20px;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.logout {
+  background: #ef4444;
+  border: none;
+  padding: 8px 12px;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout:hover {
+  background: #dc2626;
+}
+
+/* Cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.card {
+  padding: 20px;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.card h3 {
+  margin-bottom: 8px;
+}
+
+.card p {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* Table */
+.table-container {
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+}
+
+th {
+  background: #334155;
+}
+
+tr:hover {
+  background: #334155;
+}
+
+/* Status badges */
+.status {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.pending { background: orange; }
+.completed { background: green; }
+.inprogress { background: blue; }
+
+/* Buttons */
+.btn {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.approve { background: #22c55e; }
+.reject { background: #ef4444; }
+
+</style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>Workforce Admin</h2>
+  <ul>
+    <li onclick="showSection('dashboard')">Dashboard</li>
+    <li onclick="showSection('users')">Users</li>
+    <li onclick="showSection('workers')">Workers</li>
+    <li onclick="showSection('bookings')">Bookings</li>
+  </ul>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <div class="topbar">
+    <h1>Admin Panel</h1>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="section">
+    <div class="cards">
+      <div class="card">
+        <h3>Total Users</h3>
+        <p>0</p>
+      </div>
+      <div class="card">
+        <h3>Total Workers</h3>
+        <p>0</p>
+      </div>
+      <div class="card">
+        <h3>Total Bookings</h3>
+        <p>0</p>
+      </div>
+      <div class="card">
+        <h3>Total Revenue</h3>
+        <p>₹0000.00</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div id="users" class="section" style="display:none;">
+    <h2>Users</h2>
+    <div class="table-container">
+      <table id="usersTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Location</th>
+            <th>Registered Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Users will be loaded here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Workers -->
+  <div id="workers" class="section" style="display:none;">
+    <h2>Workers</h2>
+    <div class="table-container">
+      <table id="workersTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Profession</th>
+            <th>Experience</th>
+            <th>Location</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Workers will be loaded here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bookings -->
+  <div id="bookings" class="section" style="display:none;">
+    <h2>Bookings</h2>
+    <div class="table-container">
+      <table id="bookingsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Worker</th>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Bookings will be loaded here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+function showSection(sectionId) {
+  const sections = document.querySelectorAll(".section");
+  sections.forEach(section => section.style.display = "none");
+  document.getElementById(sectionId).style.display = "block";
+  
+  // Load data when section is shown
+  if (sectionId === 'users') loadUsers();
+  if (sectionId === 'workers') loadWorkers();
+  if (sectionId === 'bookings') loadBookings();
+}
+
+function logout() {
+  localStorage.removeItem("user");
+  window.location.href = "login.html";
+}
+
+// Load dashboard data on page load
+document.addEventListener('DOMContentLoaded', function() {
+  loadDashboardData();
+});
+
+function loadDashboardData() {
+  // Fetch dashboard statistics
+  fetch('/api/admin/stats')
+    .then(response => response.json())
+    .then(data => {
+      document.querySelector('#dashboard .card:nth-child(1) p').textContent = data.totalUsers || 0;
+      document.querySelector('#dashboard .card:nth-child(2) p').textContent = data.totalWorkers || 0;
+      document.querySelector('#dashboard .card:nth-child(3) p').textContent = data.totalBookings || 0;
+      document.querySelector('#dashboard .card:nth-child(4) p').textContent = '₹' + (data.totalRevenue || 0).toFixed(2);
+    })
+    .catch(error => console.error('Error loading dashboard data:', error));
+}
+
+function loadUsers() {
+  fetch('/api/admin/users')
+    .then(response => response.json())
+    .then(users => {
+      const tbody = document.querySelector('#usersTable tbody');
+      tbody.innerHTML = '';
+      
+      users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${user.id}</td>
+          <td>${user.Name}</td>
+          <td>${user.Phone}</td>
+          <td>${user.Email}</td>
+          <td>${user.Location}</td>
+          <td>${user.created_at || 'N/A'}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    })
+    .catch(error => console.error('Error loading users:', error));
+}
+
+function loadWorkers() {
+  fetch('/api/admin/workers')
+    .then(response => response.json())
+    .then(workers => {
+      const tbody = document.querySelector('#workersTable tbody');
+      tbody.innerHTML = '';
+      
+      workers.forEach(worker => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${worker.id}</td>
+          <td>${worker.Name}</td>
+          <td>${worker.phone}</td>
+          <td>${worker.email}</td>
+          <td>${worker.profession}</td>
+          <td>${worker.experience}</td>
+          <td>${worker.location}</td>
+          <td><span class="status completed">Active</span></td>
+        `;
+        tbody.appendChild(row);
+      });
+    })
+    .catch(error => console.error('Error loading workers:', error));
+}
+
+function loadBookings() {
+  fetch('/api/admin/bookings')
+    .then(response => response.json())
+    .then(bookings => {
+      const tbody = document.querySelector('#bookingsTable tbody');
+      tbody.innerHTML = '';
+      
+      bookings.forEach(booking => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${booking.id}</td>
+          <td>${booking.customer_name}</td>
+          <td>${booking.worker_name}</td>
+          <td>${booking.service}</td>
+          <td><span class="status ${booking.status.toLowerCase()}">${booking.status}</span></td>
+          <td>${booking.date}</td>
+          <td>₹${booking.amount}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    })
+    .catch(error => console.error('Error loading bookings:', error));
+}
+</script>
+
+</body>
+</html>
