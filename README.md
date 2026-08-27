@@ -1,4 +1,3 @@
-# On-Demand-WorkForce
 # On-Demand Workforce Management System
 
 A full-stack web application that connects customers with skilled workers for on-demand services. The system simplifies worker discovery, service booking, workforce management, and booking tracking through a centralized platform.
