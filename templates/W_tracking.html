@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tracking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI';
+}
+
+#map {
+  height: 100vh;
+  width: 100%;
+}
+
+.complete-btn {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  background: green;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  z-index: 1;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.complete-btn:hover {
+  background: darkgreen;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: #0f172a;
+  margin: 10% auto;
+  padding: 30px;
+  border: 1px solid #4f46e5;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 400px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: #4f46e5;
+  text-align: center;
+}
+
+.modal-body {
+  margin: 20px 0;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.info-label {
+  font-weight: bold;
+  color: #a5b4fc;
+}
+
+.info-value {
+  color: white;
+}
+
+.location-box {
+  background: rgba(79, 70, 229, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  border-left: 4px solid #4f46e5;
+}
+
+.location-title {
+  color: #a5b4fc;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.location-text {
+  color: white;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.btn-confirm {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-confirm:hover {
+  background: #16a34a;
+}
+
+.btn-cancel {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background: #4b5563;
+}
+
+.loading {
+  text-align: center;
+  color: #a5b4fc;
+}
+
+.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+  border-left: 4px solid #ef4444;
+}
+
+.success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+  border-left: 4px solid #22c55e;
+}
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+<button class="complete-btn" onclick="showCompleteModal()">Complete Work</button>
+
+<!-- Payment/Completion Modal -->
+<div id="completeModal" class="modal">
+  <div class="modal-content">
+    <h2>💳 Complete Service</h2>
+    
+    <div id="modalBody" class="modal-body">
+      <div class="loading">Loading booking details...</div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-confirm" onclick="confirmCompletion()">✅ Confirm Completion</button>
+      <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+let map;
+let workerMarker;
+let customerMarker;
+let currentBooking = null;
+
+// Custom Icons to fix broken red icon CDN and size issues
+const customerIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+const workerIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+function initMap() {
+  map = L.map('map').setView([15.29, 74.69], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+}
+
+function updateBookingMarkers(booking) {
+  const bounds = [];
+
+  if (booking.customer_lat && booking.customer_lng) {
+    const customerLatLng = [booking.customer_lat, booking.customer_lng];
+    if (customerMarker) {
+      customerMarker.setLatLng(customerLatLng);
+    } else {
+      customerMarker = L.marker(customerLatLng, {icon: customerIcon}).addTo(map).bindPopup('Customer location');
+    }
+    bounds.push(customerLatLng);
+  }
+
+  if (booking.worker_lat && booking.worker_lng) {
+    const workerLatLng = [booking.worker_lat, booking.worker_lng];
+    if (workerMarker) {
+      workerMarker.setLatLng(workerLatLng);
+    } else {
+      workerMarker = L.marker(workerLatLng, {icon: workerIcon}).addTo(map).bindPopup('Your location');
+    }
+    bounds.push(workerLatLng);
+  }
+
+  if (bounds.length > 0) {
+    map.fitBounds(L.latLngBounds(bounds).pad(0.2));
+  }
+}
+
+async function refreshBookingInfo() {
+  const booking = await loadCurrentBooking();
+  if (booking) {
+    updateBookingMarkers(booking);
+  }
+}
+
+async function loadCurrentBooking() {
+  try {
+    const response = await fetch('/api/worker-bookings', {
+      method: 'GET',
+      headers: {'Content-Type': 'application/json'}
+    });
+    const data = await response.json();
+
+    if (data.success && data.bookings.length > 0) {
+      currentBooking = data.bookings[0];
+      return currentBooking;
+    }
+  } catch (error) {
+    console.error('Error fetching worker bookings:', error);
+  }
+  return null;
+}
+
+async function sendWorkerLocation(latitude, longitude) {
+  try {
+    const body = {latitude, longitude};
+    if (currentBooking && currentBooking.booking_id) {
+      body.booking_id = currentBooking.booking_id;
+    }
+
+    await fetch('/api/update-worker-location', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+  } catch (error) {
+    console.error('Error sending worker location:', error);
+  }
+}
+
+function updateWorkerPosition(lat, lng) {
+  if (!map) return;
+
+  const workerLatLng = [lat, lng];
+
+  if (workerMarker) {
+    workerMarker.setLatLng(workerLatLng);
+  } else {
+    workerMarker = L.marker(workerLatLng).addTo(map).bindPopup('You are here');
+  }
+
+  map.setView(workerLatLng, 15);
+}
+
+navigator.geolocation.watchPosition(async (pos) => {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+
+  updateWorkerPosition(lat, lng);
+  await sendWorkerLocation(lat, lng);
+}, (err) => {
+  console.error('Geolocation error:', err);
+}, {
+  enableHighAccuracy: true,
+  maximumAge: 10000,
+  timeout: 10000
+});
+
+// Show complete work modal
+async function showCompleteModal() {
+  const modal = document.getElementById('completeModal');
+  const modalBody = document.getElementById('modalBody');
+  
+  modal.style.display = 'block';
+  modalBody.innerHTML = '<div class="loading">Loading booking details...</div>';
+  
+  try {
+    const booking = await loadCurrentBooking();
+    if (booking) {
+      currentBooking = booking;
+      const bookingHtml = `
+        <div class="info-row">
+          <span class="info-label">Customer:</span>
+          <span class="info-value">${booking.customer_name}</span>
+        </div>
+        
+        <div class="info-row">
+          <span class="info-label">Service:</span>
+          <span class="info-value">${booking.service}</span>
+        </div>
+        
+        <div class="info-row">
+          <span class="info-label">Amount:</span>
+          <span class="info-value">₹${booking.amount}</span>
+        </div>
+        
+        <div class="location-box">
+          <div class="location-title">📍 Customer Location:</div>
+          <div class="location-text">${booking.customer_location || 'Not available'}</div>
+        </div>
+        
+        <div class="info-row">
+          <span class="info-label">Status:</span>
+          <span class="info-value">${booking.status}</span>
+        </div>
+      `;
+      modalBody.innerHTML = bookingHtml;
+    } else {
+      modalBody.innerHTML = '<div class="error">❌ No active bookings found. Please contact support.</div>';
+    }
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    modalBody.innerHTML = `<div class="error">❌ Error loading details: ${error.message}</div>`;
+  }
+}
+
+async function confirmCompletion() {
+  if (!currentBooking) {
+    alert('No booking selected');
+    return;
+  }
+  
+  try {
+    // 1. Check if the payment is done
+    const payCheckResponse = await fetch(`/api/check-payment?booking_id=${currentBooking.booking_id}`, {
+      method: 'GET',
+      headers: {'Content-Type': 'application/json'}
+    });
+    const payCheckResult = await payCheckResponse.json();
+    
+    if (!payCheckResult.success || !payCheckResult.paid) {
+      alert('⏳ Payment is not done yet. Please ask the customer to pay now.');
+      return;
+    }
+    
+    // 2. If paid, complete the booking
+    const response = await fetch('/api/complete-booking', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        booking_id: currentBooking.booking_id,
+        rating: 0,
+        feedback: 'Service completed and payment received'
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      const modalBody = document.getElementById('modalBody');
+      modalBody.innerHTML = '<div class="success">✅ Payment confirmed and service completed!</div>';
+      
+      setTimeout(() => {
+        closeModal();
+        alert('Job completed successfully!');
+        window.location.href = '/worker_dash';
+      }, 2000);
+    } else {
+      alert('Error completing service: ' + (result.error || 'Unknown error'));
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error checking payment: ' + error.message);
+  }
+}
+
+function closeModal() {
+  const modal = document.getElementById('completeModal');
+  modal.style.display = 'none';
+  currentBooking = null;
+}
+
+window.onclick = function(event) {
+  const modal = document.getElementById('completeModal');
+  if (event.target === modal) {
+    closeModal();
+  }
+}
+
+window.addEventListener('load', function() {
+  initMap();
+  refreshBookingInfo();
+  setInterval(refreshBookingInfo, 10000);
+});
+</script>
+
+</body>
+</html>

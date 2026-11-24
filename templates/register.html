@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registration</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  height: 100vh;
+  background: 
+    linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+url('https://png.pngtree.com/thumb_back/fh260/background/20231107/pngtree-essential-safety-gear-and-tools-for-construction-workers-on-concrete-texture-image_13797457.png');
+    background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.container {
+  width: 380px;
+  padding: 30px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  color: white;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+select, input, button {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
+
+input, select {
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+input::placeholder {
+  color: #eee;
+}
+
+button {
+  background: linear-gradient(135deg, #4f46e5, #6d28d9);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+.hidden {
+  display: none;
+}
+
+/* Footer Fix */
+.footer {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+  color: #ddd;
+}
+
+.footer span {
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.footer span:hover {
+  text-decoration: underline;
+  color: #a5b4fc;
+}
+select {
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+select option {
+  color: black;
+  background: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Register</h2>
+
+  <select id="roleSelect">
+    <option value="customer">Customer</option>
+    <option value="worker">Worker</option>
+  </select>
+
+  <form action="/c_user_details" method="POST" id="customerForm">
+    <label>Name</label>
+    <input type="text" name="Name" placeholder="Name" required>
+    <label>Phone</label>
+    <input type="text" name="Phone" placeholder="Phone" required>
+    <label>Email</label>
+    <input type="email" name="Email" placeholder="Email" required>
+    <label>Password</label>
+    <input type="password" name="Password" placeholder="Password" required>
+    <label>Location</label>
+    <input type="text" name="Location" placeholder="Location" required>
+    <button type="submit">Register as Customer</button>
+  </form>
+
+  <form action="/W_user_details" method="POST" id="workerForm" class="hidden">
+    <label>Name</label>
+    <input type="text" name="Name" placeholder="Name" required>
+    <label>Phone</label>
+    <input type="text" name="Phone" placeholder="Phone" required>
+    <label>Email</label>
+    <input type="email" name="Email" placeholder="Email" required>
+    <label>Password</label>
+    <input type="password" name="Password" placeholder="Password" required>
+    <label>Profession</label>
+    <input type="text" name="Profession" placeholder="Profession" required>
+    <label>Experience (years)</label>
+    <input type="text" name="Experience" placeholder="Experience (years)" required>
+    <label>Location</label>
+    <input type="text" name="Location" placeholder="Location" required>
+    <button type="submit">Register as Worker</button>
+  </form>
+
+  <div class="footer">
+    Already have an account? <span onclick="goToLogin()">Login</span>
+  </div>
+
+</div>
+
+<script>
+const roleSelect = document.getElementById("roleSelect");
+const customerForm = document.getElementById("customerForm");
+const workerForm = document.getElementById("workerForm");
+
+roleSelect.addEventListener("change", () => {
+  if (roleSelect.value === "worker") {
+    customerForm.classList.add("hidden");
+    workerForm.classList.remove("hidden");
+  } else {
+    workerForm.classList.add("hidden");
+    customerForm.classList.remove("hidden");
+  }
+});
+
+function goToLogin() {
+  window.location.href = "login.html";
+}
+</script>
+
+</body>
+</html>

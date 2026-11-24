@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Job Completed</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  background: #0f172a;
+  color: white;
+  font-family: 'Segoe UI';
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card {
+  background: rgba(255,255,255,0.08);
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  width: 340px;
+  backdrop-filter: blur(10px);
+}
+
+h2 {
+  color: #22c55e;
+  margin-bottom: 10px;
+}
+
+p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.amount {
+  font-size: 22px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+button {
+  margin-top: 20px;
+  padding: 12px;
+  width: 100%;
+  border-radius: 10px;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <h2>✅ Job Completed</h2>
+
+  <p id="service"></p>
+  <p id="customer"></p>
+  <p id="time"></p>
+
+  <div class="amount" id="earnings"></div>
+
+  <button onclick="goDashboard()">Back to Dashboard</button>
+
+</div>
+
+<script>
+
+// Get job
+const job = JSON.parse(localStorage.getItem("trackingJob"));
+
+// Protect
+if (!job) {
+  document.querySelector('.card').innerHTML = `
+    <h2>⚠️ No Job Found</h2>
+    <button onclick="window.location.href='/worker_dash'">Go Dashboard</button>
+  `;
+} else {
+
+const service = job.service || "Service";
+const customer = job.customerName || "Customer";
+const price = job.price || 0;
+
+// Commission
+const commission = Math.round(price * 0.1);
+const finalEarning = price - commission;
+
+// UI
+document.getElementById("service").innerText = "Service: " + service;
+document.getElementById("customer").innerText = "Customer: " + customer;
+document.getElementById("time").innerText = "Completed: " + new Date().toLocaleString();
+document.getElementById("earnings").innerText = "Earned: ₹" + finalEarning;
+
+// Save once
+if (!job.saved) {
+  let history = JSON.parse(localStorage.getItem("jobHistory")) || [];
+
+  history.push({
+    service,
+    customer,
+    earning: finalEarning,
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem("jobHistory", JSON.stringify(history));
+
+  job.saved = true;
+  localStorage.setItem("trackingJob", JSON.stringify(job));
+}
+
+// ✅ AUTO REDIRECT AFTER 3 SEC
+setTimeout(() => {
+  goDashboard();
+}, 3000);
+
+}
+
+// Manual fallback
+function goDashboard() {
+  localStorage.removeItem("trackingJob");
+  window.location.href = "/worker_dash";
+}
+</script>
+
+</body>
+</html>

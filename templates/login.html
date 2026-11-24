@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Workforce Platform Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: 
+        linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+        url('https://images.unsplash.com/photo-1577199001468-44c049e7603f?fm=jpg&q=60&w=3000');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: 350px;
+      padding: 40px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+      color: #fff;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .header h2 {
+      color: #fff;
+    }
+
+    .header p {
+      color: #ddd;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .input-group {
+      margin-bottom: 18px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: #ddd;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .input-group input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .input-group input:focus {
+      border-color: #6d5dfc;
+      box-shadow: 0 0 8px rgba(109, 93, 252, 0.5);
+    }
+
+    .password-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .password-wrapper input {
+      width: 100%;
+      padding-right: 40px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 5px 8px;
+      transition: color 0.3s;
+      font-weight: bold;
+    }
+
+    .toggle-password:hover {
+      color: rgba(255, 255, 255, 1);
+    }
+
+    .forgot {
+      text-align: right;
+      font-size: 13px;
+      margin-bottom: 15px;
+      color: #ccc;
+      cursor: pointer;
+    }
+
+    .forgot:hover {
+      color: #fff;
+    }
+
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6d5dfc, #8e44ec);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 20px;
+      color: #ccc;
+    }
+
+    .footer a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="header">
+      <h2>Workforce Platform</h2>
+      <p>Connect • Work • Earn</p>
+    </div>
+
+    <form action="/login" method="POST">
+
+      <div class="input-group">
+        <label>Mobile Number</label>
+        <input type="text" name="Phone" placeholder="Enter phone number" required>
+      </div>
+
+      <div class="input-group">
+        <label>Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="passwordInput" name="Password" placeholder="Enter password" required>
+          <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" id="toggleBtn">Show</button>
+        </div>
+      </div>
+
+      <div class="forgot">Forgot Password?</div>
+
+      <button class="btn">Login</button>
+
+    </form>
+
+    <div class="footer">
+      New user? <a href="/register">Register here</a> | <a href="/admin_login">Admin Login</a>
+    </div>
+
+  </div>
+  {% if error %}
+  <script>alert("{{ error }}");</script>
+  {% endif %}
+  {% if success %}
+  <script>alert("{{ success }}");</script>
+  {% endif %}
+
+  <script>
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById('passwordInput');
+      const toggleBtn = document.getElementById('toggleBtn');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleBtn.textContent = 'Hide';
+      } else {
+        passwordInput.type = 'password';
+        toggleBtn.textContent = 'Show';
+      }
+    }
+  </script>
+</body>
+</html>

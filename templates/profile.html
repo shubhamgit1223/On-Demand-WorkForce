@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Customer Profile - Workforce</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; }
+
+body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  color: #fff;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.back-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background: rgba(79, 70, 229, 0.2);
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  color: #4f46e5;
+  cursor: pointer;
+  text-decoration: none;
+  margin-bottom: 20px;
+  transition: 0.3s;
+}
+
+.back-btn:hover {
+  background: #4f46e5;
+  color: white;
+}
+
+/* PROFILE CARD */
+.profile-card {
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.profile-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #4f46e5;
+  background: rgba(79, 70, 229, 0.2);
+  cursor: pointer;
+}
+
+.profile-img:hover {
+  opacity: 0.8;
+}
+
+.profile-info h2 {
+  font-size: 28px;
+  margin-bottom: 5px;
+}
+
+.profile-info p {
+  color: #cbd5e1;
+  margin: 3px 0;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.stat-box {
+  text-align: center;
+  padding: 15px;
+  background: rgba(79, 70, 229, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(79, 70, 229, 0.3);
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #4f46e5;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #cbd5e1;
+  margin-top: 5px;
+}
+
+/* FORM SECTION */
+.form-section {
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+.form-section h3 {
+  margin-bottom: 20px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.edit-toggle {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: auto;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-grid.full {
+  grid-template-columns: 1fr;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 12px;
+  color: #cbd5e1;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #fff;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.display-value {
+  padding: 10px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 8px;
+  color: #cbd5e1;
+}
+
+/* BUTTONS */
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: #4f46e5;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #3730a3;
+}
+
+.btn-secondary {
+  background: rgba(79, 70, 229, 0.2);
+  color: #4f46e5;
+  border: 1px solid #4f46e5;
+}
+
+.btn-secondary:hover {
+  background: #4f46e5;
+  color: white;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.hidden {
+  display: none;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #cbd5e1;
+}
+
+.success-message {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid #22c55e;
+  color: #22c55e;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .profile-header {
+    justify-content: center;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-box {
+    padding: 10px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+
+  <!-- PROFILE CARD -->
+  <div class="profile-card">
+    <div class="profile-header">
+      <img id="profileImg" src="https://via.placeholder.com/120" class="profile-img" title="Click to change photo">
+      <input type="file" id="photoInput" class="hidden" accept="image/*" onchange="handlePhotoChange()">
+      
+      <div class="profile-info">
+        <h2 id="displayName">Loading...</h2>
+        <p id="displayEmail">Loading...</p>
+        <p id="displayPhone">Loading...</p>
+        <p id="displayLocation">Loading...</p>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="profile-stats">
+      <div class="stat-box">
+        <div class="stat-value" id="totalBookings">0</div>
+        <div class="stat-label">Total Bookings</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="completedBookings">0</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">₹<span id="totalSpent">0</span></div>
+        <div class="stat-label">Total Spent</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS MESSAGE -->
+  <div class="success-message" id="successMsg">✓ Profile updated successfully!</div>
+
+  <!-- EDIT FORM -->
+  <div class="form-section">
+    <h3>
+      <span>📋 Personal Information</span>
+      <button class="edit-toggle" onclick="toggleEdit()">Edit</button>
+    </h3>
+
+    <div id="displayMode">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Name</label>
+          <div class="display-value" id="displayNameField">-</div>
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <div class="display-value" id="displayPhoneField">-</div>
+        </div>
+      </div>
+      <div class="form-grid full">
+        <div class="form-group">
+          <label>Email</label>
+          <div class="display-value" id="displayEmailField">-</div>
+        </div>
+      </div>
+      <div class="form-grid full">
+        <div class="form-group">
+          <label>Location / Address</label>
+          <div class="display-value" id="displayLocationField">-</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="editMode" class="hidden">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="editName" placeholder="Enter your name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="editEmail" placeholder="Enter your email">
+        </div>
+      </div>
+      <div class="form-grid full">
+        <div class="form-group">
+          <label>Location / Address</label>
+          <textarea id="editLocation" placeholder="Enter your location or full address"></textarea>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="saveProfile()">💾 Save Changes</button>
+        <button class="btn btn-secondary" onclick="toggleEdit()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DANGER ZONE -->
+  <div class="form-section" style="border-color: rgba(239, 68, 68, 0.3);">
+    <h3>⚠️ Danger Zone</h3>
+    <button class="btn btn-danger" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<script>
+async function loadProfile() {
+  try {
+    const response = await fetch('/api/customer-profile');
+    const data = await response.json();
+
+    if (!data.success) {
+      alert('Error loading profile: ' + data.error);
+      window.location.href = '/login';
+      return;
+    }
+
+    // Update display
+    document.getElementById('displayName').textContent = data.name;
+    document.getElementById('displayEmail').textContent = data.email || 'Not provided';
+    document.getElementById('displayPhone').textContent = data.phone;
+    document.getElementById('displayLocation').textContent = data.location || 'Not provided';
+
+    // Display mode
+    document.getElementById('displayNameField').textContent = data.name;
+    document.getElementById('displayPhoneField').textContent = data.phone;
+    document.getElementById('displayEmailField').textContent = data.email || '-';
+    document.getElementById('displayLocationField').textContent = data.location || '-';
+
+    // Stats
+    document.getElementById('totalBookings').textContent = data.total_bookings;
+    document.getElementById('completedBookings').textContent = data.completed_bookings;
+    document.getElementById('totalSpent').textContent = data.total_spent.toFixed(2);
+
+    // Edit mode
+    document.getElementById('editName').value = data.name;
+    document.getElementById('editEmail').value = data.email || '';
+    document.getElementById('editLocation').value = data.location || '';
+
+    // Load saved photo
+    const saved = localStorage.getItem('customerPhoto');
+    if (saved) {
+      document.getElementById('profileImg').src = saved;
+    }
+  } catch (error) {
+    console.error('Error loading profile:', error);
+    alert('Failed to load profile');
+  }
+}
+
+function toggleEdit() {
+  const displayMode = document.getElementById('displayMode');
+  const editMode = document.getElementById('editMode');
+  
+  displayMode.classList.toggle('hidden');
+  editMode.classList.toggle('hidden');
+}
+
+async function saveProfile() {
+  try {
+    const email = document.getElementById('editEmail').value;
+    const location = document.getElementById('editLocation').value;
+
+    const response = await fetch('/api/update-customer-profile', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, location})
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      showSuccess('Profile updated successfully!');
+      setTimeout(() => loadProfile(), 500);
+      toggleEdit();
+    } else {
+      alert('Error: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Error saving profile:', error);
+    alert('Failed to save profile');
+  }
+}
+
+function handlePhotoChange() {
+  const file = document.getElementById('photoInput').files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById('profileImg').src = e.target.result;
+      localStorage.setItem('customerPhoto', e.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+document.getElementById('profileImg').addEventListener('click', () => {
+  document.getElementById('photoInput').click();
+});
+
+function showSuccess(msg) {
+  const el = document.getElementById('successMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function logout() {
+  if (confirm('Are you sure you want to logout?')) {
+    window.location.href = '/logout';
+  }
+}
+
+loadProfile();
+</script>
+
+</body>
+</html>

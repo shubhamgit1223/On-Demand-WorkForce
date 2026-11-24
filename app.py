@@ -1,9 +1,27 @@
 from flask import Flask,render_template,request,redirect,session
 import mysql.connector
 import os
+from pathlib import Path
+from werkzeug.security import check_password_hash, generate_password_hash
+
+
+def load_local_env():
+    env_file = Path(__file__).resolve().parent / '.env'
+    if not env_file.exists():
+        return
+
+    for raw_line in env_file.read_text(encoding='utf-8').splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, value = line.split('=', 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"\''))
+
+
+load_local_env()
 template_dir = os.path.abspath('templates') if os.path.isdir('templates') else '.'
 app=Flask(__name__, template_folder=template_dir)
-app.secret_key = 'your_secret_key_here'
+app.secret_key = os.getenv('SECRET_KEY', 'development-only-change-me')
 
 
 def create_db_connection():
@@ -17,16 +35,64 @@ def create_db_connection():
             user=user,
             password=password,
             database=database,
+            port=int(os.getenv('DB_PORT', '3306')),
             connection_timeout=5
         )
     except mysql.connector.Error as err:
         print(f"Error connecting to MySQL at {host}: {err}")
+        if err.errno == 1045 and not password:
+            raise SystemExit(
+                "Database access denied because DB_PASSWORD is empty. "
+                "Set DB_PASSWORD in .env or the terminal environment."
+            ) from err
         raise SystemExit(
             f"Database connection failed. Make sure MySQL is running and accessible on {host}:3306. Error: {err}"
         )
 
 conn = create_db_connection()
 cursor = conn.cursor(buffered=True)
+
+
+def ensure_database_schema():
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS C_user_details (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            Name VARCHAR(255),
+            Phone VARCHAR(50),
+            Email VARCHAR(255),
+            Password VARCHAR(255),
+            Location VARCHAR(255)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS W_user_details (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            Name VARCHAR(255),
+            phone VARCHAR(50),
+            password VARCHAR(255),
+            email VARCHAR(255),
+            profession VARCHAR(255),
+            experience VARCHAR(50),
+            location VARCHAR(255)
+        )
+    """)
+    conn.commit()
+
+
+ensure_database_schema()
+
+
+def is_password_hash(value):
+    return isinstance(value, str) and value.startswith(("scrypt:", "pbkdf2:"))
+
+
+def password_matches(stored_password, supplied_password):
+    if not isinstance(stored_password, str) or not isinstance(supplied_password, str):
+        return False
+    if is_password_hash(stored_password):
+        return check_password_hash(stored_password, supplied_password)
+    return stored_password == supplied_password
+
 
 # Worker Registration
 @app.route('/W_user_details', methods=['POST'])
@@ -41,7 +107,7 @@ def insert():
 
     cursor.execute(
         "INSERT INTO W_user_details(Name,phone,password,email,profession,experience,location) VALUES(%s,%s,%s,%s,%s,%s,%s)",
-        (Name,Phone,Password,Email,Profession,Experience,Location)
+        (Name,Phone,generate_password_hash(Password),Email,Profession,Experience,Location)
     )
     conn.commit()
     return render_template('login.html', success="Worker registered successfully! Please login.")
@@ -56,7 +122,7 @@ def c_insert():
     Location=request.form['Location']
     cursor.execute(
         "INSERT INTO C_user_details(Name,Phone,Email,Password,Location) VALUES(%s,%s,%s,%s,%s)",
-        (Name,Phone,Email,Password,Location)
+        (Name,Phone,Email,generate_password_hash(Password),Location)
     )
     conn.commit()
     return render_template('login.html', success="Customer registered successfully! Please login.")
@@ -69,30 +135,76 @@ def login():
         Password=request.form.get('Password')
         
         print(f"\n=== Login Attempt ===")
-        print(f"Phone: {Phone}, Password: {Password}")
+        print(f"Phone: {Phone}")
         
         local_cursor = conn.cursor(buffered=True)
         try:
+            local_cursor.execute("SELECT * FROM W_user_details WHERE phone=%s", (Phone,))
+            worker = local_cursor.fetchone()
+            if worker and password_matches(worker[2], Password):
+                if not is_password_hash(worker[2]):
+                    local_cursor.execute(
+                        "UPDATE W_user_details SET password=%s WHERE id=%s",
+                        (generate_password_hash(Password), worker[7])
+                    )
+                    conn.commit()
+                session['user_id'] = worker[7]
+                session['user_name'] = worker[0]
+                session['role'] = 'worker'
+                return redirect('/worker_dash')
+
             # Check worker credentials
-            local_cursor.execute("SELECT * FROM W_user_details WHERE phone=%s AND password=%s", (Phone, Password))
+            local_cursor.execute(
+                "SELECT * FROM W_user_details WHERE phone=%s AND password=%s "
+                "AND password NOT LIKE 'scrypt:%' AND password NOT LIKE 'pbkdf2:%'",
+                (Phone, Password)
+            )
             worker = local_cursor.fetchone()
             print(f"Worker found: {worker is not None}")
             
             if worker:
-                print(f"Worker data: {worker}")
+                if not is_password_hash(worker[2]):
+                    local_cursor.execute(
+                        "UPDATE W_user_details SET password=%s WHERE id=%s",
+                        (generate_password_hash(Password), worker[7])
+                    )
+                    conn.commit()
                 session['user_id'] = worker[7]  # ID is the last column (index 7)
                 session['user_name'] = worker[0]  # Name is the first column (index 0)
                 session['role'] = 'worker'
                 print(f"Session set: user_id={session.get('user_id')}, user_name={session.get('user_name')}, role={session.get('role')}")
                 return redirect('/worker_dash')
             
+            local_cursor.execute("SELECT * FROM C_user_details WHERE Phone=%s", (Phone,))
+            customer = local_cursor.fetchone()
+            if customer and password_matches(customer[4], Password):
+                if not is_password_hash(customer[4]):
+                    local_cursor.execute(
+                        "UPDATE C_user_details SET Password=%s WHERE id=%s",
+                        (generate_password_hash(Password), customer[0])
+                    )
+                    conn.commit()
+                session['user_id'] = customer[0]
+                session['user_name'] = customer[1]
+                session['role'] = 'customer'
+                return redirect('/dashboard')
+
             # Check customer credentials
-            local_cursor.execute("SELECT * FROM C_user_details WHERE Phone=%s AND Password=%s", (Phone, Password))
+            local_cursor.execute(
+                "SELECT * FROM C_user_details WHERE Phone=%s AND Password=%s "
+                "AND Password NOT LIKE 'scrypt:%' AND Password NOT LIKE 'pbkdf2:%'",
+                (Phone, Password)
+            )
             customer = local_cursor.fetchone()
             print(f"Customer found: {customer is not None}")
             
             if customer:
-                print(f"Customer data: {customer}")
+                if not is_password_hash(customer[4]):
+                    local_cursor.execute(
+                        "UPDATE C_user_details SET Password=%s WHERE id=%s",
+                        (generate_password_hash(Password), customer[0])
+                    )
+                    conn.commit()
                 session['user_id'] = customer[0]  # id is first column
                 session['user_name'] = customer[1]  # Name is second column
                 session['role'] = 'customer'
@@ -355,7 +467,7 @@ def admin_stats():
 @app.route('/api/admin/users')
 def admin_users():
     try:
-        cursor.execute("SELECT * FROM C_user_details")
+        cursor.execute("SELECT id, Name, Phone, Email, Location FROM C_user_details")
         users = cursor.fetchall()
         
         # Convert to list of dicts
@@ -366,8 +478,7 @@ def admin_users():
                 'Name': user[1],
                 'Phone': user[2],
                 'Email': user[3],
-                'Password': user[4],  # Note: In production, don't send passwords
-                'Location': user[5]
+                'Location': user[4]
             })
         
         return user_list
@@ -378,21 +489,20 @@ def admin_users():
 @app.route('/api/admin/workers')
 def admin_workers():
     try:
-        cursor.execute("SELECT * FROM W_user_details")
+        cursor.execute("SELECT Name, phone, email, profession, experience, location, id FROM W_user_details")
         workers = cursor.fetchall()
         
         # Convert to list of dicts
         worker_list = []
         for worker in workers:
             worker_list.append({
-                'id': worker[7],  # id is the last column
+                'id': worker[6],  # id is the last column
                 'Name': worker[0],
                 'phone': worker[1],
-                'password': worker[2],  # Note: In production, don't send passwords
-                'email': worker[3],
-                'profession': worker[4],
-                'experience': worker[5],
-                'location': worker[6]
+                'email': worker[2],
+                'profession': worker[3],
+                'experience': worker[4],
+                'location': worker[5]
             })
         
         return worker_list
@@ -1011,4 +1121,4 @@ def home():
     return render_template('landing.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', '5000')))

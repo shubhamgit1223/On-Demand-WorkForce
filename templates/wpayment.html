@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Payment Status</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  background: #0f172a;
+  color: white;
+  font-family: 'Segoe UI';
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card {
+  background: rgba(255,255,255,0.08);
+  padding: 30px;
+  border-radius: 20px;
+  width: 350px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+h2 {
+  margin-bottom: 10px;
+}
+
+.status {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 15px 0;
+}
+
+.paid { color: #22c55e; }
+.pending { color: #f59e0b; }
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 10px;
+  background: #4f46e5;
+  color: white;
+  cursor: pointer;
+}
+
+.complete {
+  background: #22c55e;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <h2>💳 Payment Status</h2>
+
+  <p id="customer"></p>
+  <p id="service"></p>
+  <p id="amount"></p>
+
+  <div id="status" class="status"></div>
+
+  <!-- Action buttons -->
+  <button onclick="refreshStatus()">🔄 Refresh Status</button>
+  <button class="complete" onclick="completeJob()">✅ Complete Job</button>
+
+</div>
+
+<script>
+
+// Get job + payment data
+const job = JSON.parse(localStorage.getItem("trackingJob")) || {};
+const paymentStatus = localStorage.getItem("paymentStatus");
+
+// Show details
+document.getElementById("customer").innerText = "Customer: " + (job.customerName || "N/A");
+document.getElementById("service").innerText = "Service: " + (job.service || "N/A");
+document.getElementById("amount").innerText = "Amount: ₹" + (job.price || 0);
+
+// Show payment status
+function updateStatus() {
+  const statusDiv = document.getElementById("status");
+
+  if (paymentStatus === "paid") {
+    statusDiv.innerText = "PAID ✅";
+    statusDiv.className = "status paid";
+  } else {
+    statusDiv.innerText = "PENDING ⏳";
+    statusDiv.className = "status pending";
+  }
+}
+
+completeJob = () => {
+  if (paymentStatus === "paid") {
+    alert("Job marked as complete!");
+    window.location.href = "wcomplete.html";
+  } else {
+    alert("Please complete the payment before marking job as complete.");
+  }
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Service Completed</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  background: #0f172a;
+  color: white;
+  font-family: 'Segoe UI';
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card {
+  background: rgba(255,255,255,0.08);
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  width: 300px;
+}
+
+img {
+  width: 80px;
+  border-radius: 50%;
+}
+
+.stars span {
+  font-size: 30px;
+  cursor: pointer;
+}
+
+textarea {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+}
+
+button {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #4f46e5;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <img src="https://i.pravatar.cc/100" />
+  <h3 id="workerName"></h3>
+  <p>Service Completed ✅</p>
+
+  <!-- ⭐ Rating -->
+  <div class="stars" id="stars">
+    <span onclick="rate(1)">⭐</span>
+    <span onclick="rate(2)">⭐</span>
+    <span onclick="rate(3)">⭐</span>
+    <span onclick="rate(4)">⭐</span>
+    <span onclick="rate(5)">⭐</span>
+  </div>
+
+  <textarea placeholder="Write feedback..."></textarea>
+
+  <button onclick="submitReview()">Submit</button>
+</div>
+
+<script>
+const worker = localStorage.getItem("worker");
+const amount = localStorage.getItem("amount");
+document.getElementById("workerName").innerText = worker;
+
+let selectedRating = 0;
+
+function rate(num){
+  selectedRating = num;
+  alert("You rated: " + num + " ⭐");
+}
+
+async function submitReview(){
+  if(selectedRating === 0){
+    alert("Please select rating!");
+    return;
+  }
+
+  const feedback = document.querySelector("textarea").value;
+  
+  try {
+    // Mark booking as completed
+    const response = await fetch('/api/complete-booking', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        worker_name: worker,
+        rating: selectedRating,
+        feedback: feedback
+      })
+    });
+    
+    if (response.ok) {
+      alert("✅ Review Submitted!");
+      // clear data
+      localStorage.clear();
+      window.location.href = "/dashboard";
+    } else {
+      alert("Error submitting review. Please try again.");
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert("Error submitting review. Please try again.");
+  }
+}
+</script>
+
+</body>
+</html>
