@@ -1,2 +1,4 @@
 .env
 seeded_user_credentials.csv
+__pycache__/
+*.py[cod]
